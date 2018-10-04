@@ -1,29 +1,25 @@
 require_relative 'db_connection'
 require 'active_support/inflector'
-# NB: the attr_accessor we wrote in phase 0 is NOT used in the rest
-# of this project. It was only a warm up.
+
 
 class SQLObject
-  
+
   def self.columns
-    # ...
     DBConnection.execute2(<<-SQL)
       SELECT
         *
-      FROM 
+      FROM
         #{self.table_name}
     SQL
       .first.map {|el| el.to_sym}
   end
-  
+
   def attributes
-    # ...
     @attributes ||= {}
-    
+
   end
 
   def self.finalize!
-
     self.columns.each do |col|
       define_method(col) do
         attributes[col]
@@ -40,27 +36,24 @@ class SQLObject
   end
 
   def self.table_name
-    # ...
     self.to_s.downcase + 's'
   end
 
   def self.all
-    # ...
     res = DBConnection.execute(<<-SQL)
       SELECT
         *
       FROM
         #{self.table_name}
     SQL
-    
+
     self.parse_all(res)
-    
-    
-    
+
+
+
   end
 
   def self.parse_all(results)
-    # ...
     x = []
     results.each do |res|
       x << self.new(res)
@@ -69,14 +62,12 @@ class SQLObject
   end
 
   def self.find(id)
-    # ...
-    
+
     self.all.find { |obj| obj.id == id }
 
   end
 
   def initialize(params = {})
-    # ...
     params.each do |k,v|
       if !self.class.columns.include?(k.to_sym)
         raise "unknown attribute '#{k}'"
@@ -88,14 +79,12 @@ class SQLObject
 
 
   def attribute_values
-    # ...
     self.class.columns.map do |el|
       send("#{el}=", attributes[el])
     end
   end
 
   def insert
-    # ...
     col_names = self.class.columns.join(',')
     question_marks = (["?"] * (self.class.columns).length).join(',')
 
@@ -106,16 +95,15 @@ class SQLObject
         (#{question_marks})
     SQL
     self.id = DBConnection.last_insert_row_id
-    
+
   end
 
- 
+
 
   def save
-    # ...
-    
+
     if self.id.nil?
-      self.insert 
+      self.insert
     else
       self.update
     end
