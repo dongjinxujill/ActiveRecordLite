@@ -21,14 +21,33 @@ SQLObject classes mapping between a child class and a database table function as
 
 A belongs_to association sets up a one-to-one connection with another model, such that each instance of the declaring model "belongs to" one instance of the other model. RORM provides defaults so that when table and column names follow convention, additional parameters are not required.
 
+```
+options = BelongsToOptions.new(:owner)
+options.foreign_key # => :owner_id
+options.primary_key # => :id
+options.class_name # => "Owner"
+
+# override defaults
+options = BelongsToOptions.new(:owner, :class_name => "Human")
+options.class_name # => "Human"
+```
+
 #### `has_many`
 
 A has_many association indicates a one-to-many connection with another model. You'll often find this association on the "other side" of a belongs_to association. This association indicates that each instance of the model has zero or more instances of another model.
 
-### `through`
+#### `through`
 
 This association indicates that the declaring model can be matched with zero or more instances of another model by proceeding through a third model. RORM provides a generator for compounded associations: `has_one_through`, which create one-to-one associations.
 
+```
+class Cat < SQLObject
+  belongs_to :human, :foreign_key => :owner_id
+  has_one_through :home, :human, :house
+
+  finalize!
+end
+```
 
 ### Query Methods
 
@@ -37,14 +56,44 @@ RORM implements query methods to minimize expensive and unnecessary database ret
 #### `all` and `count`
 
 `::all` is equivalent to `SELECT * from [table_name]`.  It returns an array of model instances, each encoded with column names and values as instance variables.
+```
+class Cat < SQLObject
+  finalize!
+end
+
+Cat.all
+# SELECT
+#   cats.*
+# FROM
+#   cats
+
+```
 
 `::count` is equivalent to `SELECT COUNT(*) from [table_name]` and returns the total number of records in the associated table.
 
 #### `find`
 `::find(id)` returns the record in the current table where `id`, an integer, matches the `primary_key`.
 
+```
+class SQLObject
+  def self.find(id)
+    self.all.find { |obj| obj.id == id }
+  end
+end
+```
+
 #### `where` and `where_not`
 `::where(params_hash)` and `::where_not` take a series of one or more key-value pairs, mapping the keys (symbols) to equivalent column names, and inserting the values as parameters within the SQL query.
+
+```
+haskell_cats = Cat.where(:name => "Haskell", :color => "calico")
+# SELECT
+#   *
+# FROM
+#   cats
+# WHERE
+#   name = ? AND color = ?
+```
 
 #### `first` and `last`
 
