@@ -31,7 +31,6 @@ class SQLObject
   end
 
   def self.table_name=(table_name)
-    # ...
     table_name
   end
 
@@ -48,8 +47,6 @@ class SQLObject
     SQL
 
     self.parse_all(res)
-
-
 
   end
 
